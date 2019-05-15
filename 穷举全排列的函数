@@ -1,3 +1,4 @@
+#function version
 def permute(seq):
     if not seq:
         return {seq}
@@ -7,3 +8,18 @@ def permute(seq):
         for x in permute(remain):
             res.add(seq[i]+x)
     return res
+
+
+#generator version
+def permute(seq):
+    if not seq:
+        yield seq
+    else:
+        for i in range(len(seq)):
+            remain=seq[:i]+seq[i+1:]
+            for x in permute(remain):
+                yield (seq[i]+x)
+a=set(permute(input()))
+                
+                
+            
