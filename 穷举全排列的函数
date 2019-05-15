@@ -1,0 +1,9 @@
+def permute(seq):
+    if not seq:
+        return [seq]
+    res=[]
+    for i in range(len(seq)):
+        remain=seq[:i]+seq[i+1:]
+        for x in permute(remain):
+            res.append(seq[i]+x)
+    return res
