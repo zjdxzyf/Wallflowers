@@ -1,0 +1,177 @@
+#include <iostream>
+
+#include "foo.h"
+#include "mem_pool.h"
+
+int main()
+{
+    MemPool memPool;
+    node *ret = memPool.Malloc(1000);
+    memPool.Occupy(100);
+    memPool.Occupy(900);
+    memPool.Free(ret);
+    memPool.Occupy(1);
+    system("pause");
+}
+
+#include <iostream>
+#include "mem_pool.h"
+
+constexpr int MEMPOOL_MAX_SIZE = 999999;
+constexpr int MEMPOOL_INIT_SIZE = 0;
+
+MemPool::MemPool():maxSize(MEMPOOL_MAX_SIZE),currentSize(MEMPOOL_INIT_SIZE)
+{
+    freeNodeHead = nullptr;
+}
+
+MemPool::~MemPool()
+{
+    for (auto iterator = memPoolBlock.begin();iterator != memPoolBlock.end();iterator++) 
+        delete [] *iterator;
+    memPoolBlock.clear();
+}
+
+node *MemPool::Malloc(int n)
+{
+    int freeNodeNum = 0;
+    node *nodeEnd = freeNodeHead;
+    while (nodeEnd != nullptr) {
+        nodeEnd = nodeEnd->nextNodeAddr;
+        freeNodeNum++;
+    }
+
+   //try new nodes in mempool
+    if (n + currentSize > maxSize){
+        std::cout<<"Apply for such more nodes failure, max n is "<<maxSize-currentSize<<"!"<<std::endl;
+        return freeNodeHead;
+    }
+
+    //new nodes and connect them
+    node *p = new node [n];
+    memPoolBlock.push_back(p);
+    
+    for (int i=0;i< n-1;i++) 
+        p[i].nextNodeAddr = &p[i+1];
+    p[n-1].nextNodeAddr = nullptr;
+
+    if (freeNodeHead == nullptr) 
+        freeNodeHead = p;
+    else    
+        nodeEnd->nextNodeAddr = p;
+    
+    currentSize+=n;
+    freeNodeNum+=n;
+
+    std::cout<<"New "<<n<<" nodes success!"<<std::endl;
+    std::cout<<"Now the first free node in mempool is "<<freeNodeHead<<"."<<std::endl;
+    std::cout<<"And you have "<<freeNodeNum<<" free nodes in mempool!"<<std::endl;
+    return freeNodeHead;
+    
+}
+
+node *MemPool::Occupy(int n)
+{
+    int freeNodeNum = 0;
+    node *nodeEnd = freeNodeHead;
+    while (nodeEnd != nullptr) {
+        nodeEnd = nodeEnd->nextNodeAddr;
+        freeNodeNum++;
+    }
+
+    if (freeNodeNum < n) {
+        std::cout<<"Occupy for such more nodes failure, max n is "<<freeNodeNum<<"!"<<std::endl;
+        return freeNodeHead;
+    }
+
+    for(int i=0;i < n;i++) 
+        freeNodeHead = freeNodeHead->nextNodeAddr;
+
+    std::cout<<"You have occupied "<<n<<" free nodes!"<<std::endl;
+    std::cout<<"Now the first free node in mempool is "<<freeNodeHead<<"."<<std::endl;
+    std::cout << "And you have " << freeNodeNum - n << " free nodes in mempool!" << std::endl;
+    return freeNodeHead;
+}
+
+//cancel occupy: add the busy node which is to be free-ed to free node list
+//if you try to free a node which is free, the operation may cause memery lost
+void MemPool::Free(node *ptr)
+{
+    //judge if ptr in mempool
+    node *totalNodeHead = *memPoolBlock.begin();
+    node *p=totalNodeHead;
+    while(p != nullptr){
+        if (p == ptr) {
+            node *temp = ptr;
+            ptr->nextNodeAddr = freeNodeHead;
+            freeNodeHead = temp;
+            std::cout << "The node we wanna free has been free-ed!" << std::endl;
+            std::cout << "Now the first free node in mempool is " << freeNodeHead << "." << std::endl;
+            return;
+        }
+    } 
+    
+    std::cout<<"The node we wanna free is not in mempool!"<<std::endl;
+
+}
+#ifndef MINDEXERCISE_MEM_POOL_H
+#define MINDEXERCISE_MEM_POOL_H
+
+#include <vector>
+#include "foo.h"
+
+struct node{
+    node *nextNodeAddr;
+    Foo nodeData;
+};
+
+class MemPool {
+public:
+    MemPool();
+    ~MemPool();
+    node *Malloc(int n);
+    node *Occupy(int n);
+    void Free(node *ptr);
+
+private:
+    int maxSize;
+    int currentSize;
+    node * freeNodeHead;
+    std::vector <node *> memPoolBlock;
+};
+
+#endif
+
+在第三题的基础上，为内存池添加内存归并算法(即在释放的时候如果存在多块地址连续的内存，将这些小碎块的内存合并成一个大块的内存，比如伙伴算法),并分析添加内存归并算法前后的内存利用率和内存池性能
+
+#include "foo.h"
+Foo::Foo()
+{
+    this->value = 0;
+}
+
+Foo::Foo(int value)
+{
+    this->value = value;
+}
+
+Foo::~Foo()
+{
+}
+
+#include <string>
+
+#ifndef MINDEXERCISE_FOO_H
+#define MINDEXERCISE_FOO_H
+
+class Foo {
+public:
+    Foo();
+    Foo(int value);
+    ~Foo();
+
+private:
+    int value;
+};
+
+#endif
