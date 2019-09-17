@@ -1,0 +1,57 @@
+#include <iostream>
+#include <set>
+
+using namespace std;
+
+struct Point{
+    int color;
+    int x;
+    int y;
+    Point(int color,int x,int y):color(color),x(x),y(y){}
+    bool operator<(const Point &point) const {return x!=point.x?x<point.x:y!=point.y?y<point.y:color<point.color;}
+};
+
+int dynamicSet(const Point &point,multiset<int> &pointY)
+{
+    if(point.color==0){
+        pointY.insert(point.y);
+        return 0;
+    } else {
+        if(pointY.size()==0){
+            return 0;
+        } else {
+            auto iterator=pointY.upper_bound(point.y);
+            iterator--;
+            pointY.erase(iterator);
+            return 1;
+        }
+    }
+}
+
+int main(){
+    int n;
+    cin>>n;
+    for(int i=0;i<n;i++){
+        int count=0;
+        int blackNum,whiteNum;
+        cin>>blackNum>>whiteNum;
+        multiset<Point,less<Point>> pointSet;
+        multiset<int> pointY;
+        for(int j=0;j<blackNum;j++){
+            int x,y;
+            cin>>x>>y;
+            pointSet.insert(Point(0,x,y));
+        }
+        for(int k=0;k<whiteNum;k++){
+            int x,y;
+            cin>>x>>y;
+            pointSet.insert(Point(1,x,y));
+        }
+        for(auto &point:pointSet)
+           count+=dynamicSet(point,pointY);
+        cout<<count<<endl;
+    }
+    return 0;
+}
+
+
