@@ -1,0 +1,74 @@
+#include <iostream>
+#include <vector>
+#include <climits>
+#include <cmath>
+
+using namespace std;
+
+int fare(int a,int n,vector<int> &treeNum,vector<int> &unitPay,vector<int> &d)
+{
+    int D=0;
+    int fare=0;
+    for(int i=a;i<n;i++)
+        D+=d[i];
+    for(int i=a;i<n;i++){
+        fare+=unitPay[i]*treeNum[i]*D;
+        D-=d[i];
+    }
+    return fare;
+}
+
+int main(){
+    /*f[n][k]代表了q前n个节点中拥有k个加工厂的所有树木运送的最低费用,其中最后一个节点必为加工厂*/
+    int n,k;
+    cin>>n>>k;
+    k+=1;
+    vector<vector<int>> f(n,vector<int>(k,INT_MAX));
+    
+    /*输入n个节点处的树木量*/
+    vector<int> treeNum;
+    int num;
+    for(int i=0;i<n;i++){
+        cin>>num;
+        treeNum.push_back(num);
+    }
+    
+    /*输入每个节点处出发的树木的单位运费*/
+    vector<int> unitPay;
+    for(int i=0;i<n;i++){
+        cin>>num;
+        unitPay.push_back(num);
+    }
+    
+    /*输入每个地方的间隔*/
+    vector<int> d;
+    for(int i=0;i<n-1;i++){
+        cin>>num;
+        d.push_back(num);
+    }
+    
+    /*已知n处有一个加工厂，则前面的节点最多有k-1个加工厂；f的状态转移方程:f[n][k]=min{f[i][k-1]+fare(i+1,n)}，
+     其中fare(a,b)表示将a->b节点的树运送到节点n加工厂的费用*/
+    for(int x=0;x<n;x++)
+        for(int y=0;y<k;y++){
+            if(y>x)
+                continue;
+            else if(x==0)
+                f[x][y]=0;
+            else{
+                if(y==0){
+                    f[x][y]=fare(0,x,treeNum,unitPay,d);
+                }
+                else{
+                    int minf=INT_MAX;
+                    for(int z=y-1;z<x;z++){
+                        minf=min(minf,f[z][y-1]+fare(z+1,x,treeNum,unitPay,d));
+                    }
+                    f[x][y]=minf;
+                }
+            }
+        }
+    
+    cout<<f[n-1][k-1]<<endl;
+    
+}
